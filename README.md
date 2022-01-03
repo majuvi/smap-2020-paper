@@ -4,90 +4,66 @@ Reproducible experiments for the paper "A machine learning approach to small are
 
 ## Getting started
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+Access to the [CBS remote access environment](https://www.cbs.nl/en-gb/onze-diensten/customised-services-microdata/microdata-conducting-your-own-research) is required to fetch and use the data sets.
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+## Obtaining the data sets
 
-## Add your files
+- See [data_loading.R](Scripts/General/data_loading.R) for examples how to fetch the SMAP 2012/2016/2020, WOON 2006/2015/2018, and SMAP 2016 noise measurements.
 
-- [ ] [Create](https://gitlab.com/-/experiment/new_project_readme_content:0a30bf9f68e580da228680d87b2eb5b0?https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://gitlab.com/-/experiment/new_project_readme_content:0a30bf9f68e580da228680d87b2eb5b0?https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://gitlab.com/-/experiment/new_project_readme_content:0a30bf9f68e580da228680d87b2eb5b0?https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+Run the script to fetch the required files. Only the SMAP 2020, SMAP 2016 with noise measurements, and WOON 2018 are required for the paper. The large script contains the following functions that merge several smaller data sources into the requested data set: 
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/majuvi/smap-2020-paper.git
-git branch -M main
-git push -uf origin main
+#SMAP 2020
+ref_date        <- "20200901"
+data.gemon      <- DataSetGemon(ref_date)       # health monitor
+data.population <- DataSetSMAP2020(ref_date)    # population data with missing values,
+											  # some SPSS files for 2020 not yet in RA...
+data.population <- DataSetFilledSMAP(ref_date)  # population data with missing filled
+
+# SMAP 2016
+ref_date        <- "20160901"
+data.gemon      <- DataSetGemon(ref_date)       # health monitor
+data.population <- DataSetSMAP(ref_date)        # population data with missing values
+data.population <- DataSetFilledSMAP(ref_date)  # population data with missing filled
+
+# SMAP 2016 additional noise disturbance
+data.gemon <-   DataSetGemonNoise(ref_date)
+data.noise <-   DataSetNoise('Data/7975bag2017_geluid_upload_cbs_07052018CBKV1.sav', ref_date)
+
+# WOON
+ref_date <- "20180101" #"20150101" "20060101"
+data.woon       <- DataSetWoon(ref_date)                      # housing survey
+survey_dates    <- data.woon %>% select.(rinpersoon, date)    # population survey dates for a subset
+data.population <- DataSetSurveySMAP(ref_date, survey_dates)  # population data with missing values
+data.population <- DataSetFilledSurveySMAP(ref_date)          # population data with missing filled
 ```
 
-## Integrate with your tools
+Once the data sets are fetched, cached versions are saved in Data/Populatiebestanden.
 
-- [ ] [Set up project integrations](https://gitlab.com/-/experiment/new_project_readme_content:0a30bf9f68e580da228680d87b2eb5b0?https://gitlab.com/majuvi/smap-2020-paper/-/settings/integrations)
+## Reproducible experiments 
 
-## Collaborate with your team
+- [PAPER01 - experiments.R](Scripts/SMAP/PAPER01 - experiments.R) runs all the experiments and saves the results to results/smap/paper.
+- [PAPER02 - visualizations.R](Scripts/SMAP/PAPER02 - visualizations.R) has visualization codes to plot the aforementioned results.
 
-- [ ] [Invite team members and collaborators](https://gitlab.com/-/experiment/new_project_readme_content:0a30bf9f68e580da228680d87b2eb5b0?https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://gitlab.com/-/experiment/new_project_readme_content:0a30bf9f68e580da228680d87b2eb5b0?https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://gitlab.com/-/experiment/new_project_readme_content:0a30bf9f68e580da228680d87b2eb5b0?https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://gitlab.com/-/experiment/new_project_readme_content:0a30bf9f68e580da228680d87b2eb5b0?https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Automatically merge when pipeline succeeds](https://gitlab.com/-/experiment/new_project_readme_content:0a30bf9f68e580da228680d87b2eb5b0?https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+The results in the paper are the files saved into results/smap/paper and the plots created from these using the visualization code.
 
-## Test and Deploy
+## Small area estimates
 
-Use the built-in continuous integration in GitLab.
+- [SMAP14 - fit xgboost to population (2021 gemon).R](Scripts/SMAP/SMAP14 - fit xgboost to population (2021 gemon).R) produces the 2020 GEMON estimates reported in statline.
+- [SMAP15 - fit xgboost to population (2021 woon).R](Scripts/SMAP/SMAP15 - fit xgboost to population (2021 woon).R) produces the latest 2018 WOON estimates.
 
-- [ ] [Get started with GitLab CI/CD](https://gitlab.com/-/experiment/new_project_readme_content:0a30bf9f68e580da228680d87b2eb5b0?https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://gitlab.com/-/experiment/new_project_readme_content:0a30bf9f68e580da228680d87b2eb5b0?https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://gitlab.com/-/experiment/new_project_readme_content:0a30bf9f68e580da228680d87b2eb5b0?https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://gitlab.com/-/experiment/new_project_readme_content:0a30bf9f68e580da228680d87b2eb5b0?https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://gitlab.com/-/experiment/new_project_readme_content:0a30bf9f68e580da228680d87b2eb5b0?https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+The scripts create bootstrap based prediction intervals and take a while to run. See [RIVM statline](https://statline.rivm.nl/#/RIVM/nl/dataset/50090NED) for the 2020 GEMON estimates.
 
-***
+## Simple example
 
-# Editing this README
+- [SMAP01 - example SMAP.R](Scripts/SMAP/SMAP01 - example SMAP.R) is a simple example of how to use the original STAR model.
+- [SMAP02 - example xgboost.R](Scripts/SMAP/SMAP02 - example xgboost.R) is a simple example of how to use the new XGBoost model.
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!).  Thank you to [makeareadme.com](https://gitlab.com/-/experiment/new_project_readme_content:0a30bf9f68e580da228680d87b2eb5b0?https://www.makeareadme.com/) for this template.
+Both examples contain a very short procedual script that shows how to:
+1. Evaluate the model by splitting the health monitor into train & test set. 
+2. Predict missing population values from a model trained on the health monitor
 
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+## Authors 
 
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
-
+The new XGBoost model and source codes for data sets, experiments, and examples was created by Markus Viljanen (markus.viljanen@rivm.nl) and Lotta Meijerink (lotta.meijerink@rivm.nl). 
+The original STAR model and data processing was created by Jan van de Kassteele (jan.van.de.kassteele@rivm.nl) at https://github.com/kassteele/SMAP, a refractored version appears here.
